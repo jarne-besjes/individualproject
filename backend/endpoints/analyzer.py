@@ -5,7 +5,8 @@ router = APIRouter()
 
 class Code(BaseModel):
     code: str
-@router.post("analyze")
+
+@router.post("/analyze")
 async def analyze(code: Code):
     print(code.code)
     return {"code": code.code}
