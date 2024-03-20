@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
+from .LLVMConverter import convert_to_llvm
+import llvmlite as ll
+import llvmlite.binding as ll_binding
 router = APIRouter()
 
 class Code(BaseModel):
@@ -8,5 +10,8 @@ class Code(BaseModel):
 
 @router.post("/analyze")
 async def analyze(code: Code):
-    print(code.code)
-    return {"code": code.code}
+    llvm_code = convert_to_llvm(code.code)
+    llvm = ll_binding.parse_assembly(llvm_code)
+
+    return {"llvm": str(llvm)}
+

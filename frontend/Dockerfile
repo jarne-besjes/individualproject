@@ -1,10 +1,8 @@
 FROM node:latest
 
-WORKDIR /app
-
-COPY . .
+COPY package*.json ./
 
 RUN npm i
+COPY . .
 
-# TODO edit this! this is a development server
 CMD [ "npm", "start" ]

@@ -2,19 +2,20 @@ import {useState} from "react";
 import './CodeEditor.css';
 import axios from 'axios';
 
-function submitCode(code: string) {
+export default function CodeEditor() : any {
+
+    let [userCode, setUserCode] = useState("test");
+    let [output, setOutput] = useState("Nothing yet...");
+
+    function submitCode(userCode: string) : void {
     axios.post("http://localhost:8000/api/analyze", {
-        code: code
+        code: userCode
     }).then((response) => {
-        console.log(response);
+        setOutput(response.data.code);
     }).catch((error) => {
         console.log(error);
     });
 }
-
-export default function CodeEditor() : any {
-
-    let [code, setCode] = useState("test");
 
     return (
         <div id="code-editor-div">
@@ -23,11 +24,12 @@ export default function CodeEditor() : any {
             rows={30}
             cols={200}
             placeholder="Enter your code here..."
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
+            value={userCode}
+            onChange={(e) => setUserCode(e.target.value)}
             />
-
-            <button onClick={() => submitCode(code)}>Submit</button>
+            <button id="submit-button" onClick={() => submitCode(userCode)}>Submit</button>
+            <h3>Output:</h3>
+            <pre id="outputText">{output}</pre>
         </div>
     );
 }
