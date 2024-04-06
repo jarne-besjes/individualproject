@@ -11,7 +11,7 @@ class Code(BaseModel):
 @router.post("/analyze")
 async def analyze(code: Code):
     llvm_code = convert_to_llvm(code.code)
-    llvm = ll_binding.parse_assembly(llvm_code)
+    #llvm = ll_binding.parse_assembly(llvm_code)
 
-    return {"llvm": str(llvm)}
+    return {"llvm": str(llvm_code)}
 
