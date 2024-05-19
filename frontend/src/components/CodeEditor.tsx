@@ -4,14 +4,14 @@ import axios from 'axios';
 
 export default function CodeEditor() : any {
 
-    let [userCode, setUserCode] = useState("test");
+    let [userCode, setUserCode] = useState("");
     let [output, setOutput] = useState("Nothing yet...");
 
     function submitCode(userCode: string) : void {
     axios.post("http://localhost:8000/api/analyze", {
         code: userCode
     }).then((response) => {
-        setOutput(response.data.code);
+        setOutput(response.data.llvm);
     }).catch((error) => {
         console.log(error);
     });

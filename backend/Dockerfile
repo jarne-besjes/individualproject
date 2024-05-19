@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN apt update && apt upgrade -y
-RUN apt install clang -y
+RUN apt install clang llvm -y
 
 COPY . .
 
