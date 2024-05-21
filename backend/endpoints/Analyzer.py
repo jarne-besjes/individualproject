@@ -26,8 +26,10 @@ async def analyze(code: Code):
     ast = Parser.parse("input.c")
     DotExporter.export(ast, "output")
 
+    loops = Parser.check_const_loops(ast, ast)
+
     os.remove("input.c")
     os.remove("output.ll")
     os.remove("output")
 
-    return {"llvm": str(llvm_code)}
+    return {"llvm": str(llvm_code), "infinite_loops": str(loops)}

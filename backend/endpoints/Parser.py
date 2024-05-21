@@ -41,7 +41,6 @@ class Parser:
         ast = ASTVisitor().visit(tree)
         ast = Parser.transform_loops(ast)
         ast = Parser.convert_to_ast(ast)
-        Parser.check_const_loops(ast)
         return ast
 
     @staticmethod
@@ -133,37 +132,88 @@ class Parser:
         return cst
 
     @staticmethod
-    def check_const_loops(ast: TreeNode) -> None:
+    def check_const_loops(ast: TreeNode, root: TreeNode) -> bool | str:
         for child in ast.children:
             # Ignore non-while nodes
             if not isinstance(child, WhileNode):
-                Parser.check_const_loops(child)
-                continue
+                result = Parser.check_const_loops(child, root)
+                if result is not None:
+                    return result
 
-            # Store all variables in the condition
-            condition = child.children[0]
-            condition_variables = []
-            for node in condition.children:
-                if isinstance(node, IdNode):
-                    condition_variables.append(node.value)
-
-            # Check if any of the variables in the condition are used in the loop
-            def find_variable(node: TreeNode) -> bool:
-                if isinstance(node, AssignNode):
-                    if node.children[0].value in condition_variables:
-                        return True
-                for child in node.children:
-                    if find_variable(child):
-                        return True
-                return False
-
-            condition_changes = find_variable(child.children[1])
-            if condition_changes:
-                pass
-                # TODO: Check invariant
             else:
-                pass
-                # TODO: Check if condition is false for infinite loop
+                # Store all variables in the condition
+                condition = child.children[0]
+                condition_variables = []
+                for node in condition.children:
+                    if isinstance(node, IdNode):
+                        condition_variables.append(node.value)
+
+                # Check if any of the variables in the condition are used in the loop
+                def find_variable(node: TreeNode) -> bool:
+                    if isinstance(node, AssignNode):
+                        if node.children[0].value in condition_variables:
+                            return True
+                    for child in node.children:
+                        if find_variable(child):
+                            return True
+                    return False
+
+                condition_changes = find_variable(child.children[1])
+                if condition_changes:
+                    return "Condition change"
+                    # TODO: Check invariant
+                else:
+                    return Parser.evaluate_condition(root, condition)
+
+    @staticmethod
+    def evaluate_condition(ast: TreeNode, condition: TreeNode) -> bool:
+        # Find all id's in condition
+        condition_ids = []
+        if not isinstance(condition, (IntNode, BoolNode)):
+            for child in condition.children:
+                if isinstance(child, IdNode):
+                    condition_ids.append(child.value)
+
+            # Find all variable values in the condition
+            condition_var_values = {}
+            def find_variable_value(node: TreeNode):
+                if isinstance(node, NewVariableNode):
+                    if node.children[1].value in condition_ids:
+                        condition_var_values[node.children[1].value] = node.children[-1]
+                for child in node.children:
+                    find_variable_value(child)
+                return None
+
+            find_variable_value(ast)
+
+            # Replace all id's in the condition with their values
+            for i, child in enumerate(condition.children):
+                if isinstance(child, IdNode) and child.value in condition_var_values:
+                    condition.children[i] = copy.copy(condition_var_values[child.value])
+
+            match condition:
+                case PlusNode():
+                    return bool(int(condition.children[0].value) + int(condition.children[1].value))
+                case MinusNode():
+                    return bool(int(condition.children[0].value) - int(condition.children[1].value))
+                case MultNode():
+                    return bool(int(condition.children[0].value) * int(condition.children[1].value))
+                case DivNode():
+                    return bool(int(condition.children[0].value) / int(condition.children[1].value))
+                case ModNode():
+                    return bool(int(condition.children[0].value) % int(condition.children[1].value))
+                case GtNode():
+                    return bool(int(condition.children[0].value) > int(condition.children[1].value))
+                case LtNode():
+                    return bool(int(condition.children[0].value) < int(condition.children[1].value))
+                case GeqNode():
+                    return bool(int(condition.children[0].value) >= int(condition.children[1].value))
+                case LeqNode():
+                    return bool(int(condition.children[0].value) <= int(condition.children[1].value))
+                case EqualNode():
+                    return bool(int(condition.children[0].value) == int(condition.children[1].value))
+                case NeqNode():
+                    return bool(int(condition.children[0].value) != int(condition.children[1].value))
 
 
 operator_signs = {
