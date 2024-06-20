@@ -6,6 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN apt update && apt upgrade -y
 RUN apt install clang llvm graphviz -y
+RUN apt install opt -y
 
 COPY . .
 
