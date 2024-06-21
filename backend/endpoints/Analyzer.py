@@ -33,14 +33,18 @@ async def analyze(code: Code):
 
     rec_analyzer = RecursiveCalls(llvm_code, ast)
     print(rec_analyzer.get_recursive_calls(), file=sys.stderr)
+    rec_analyzer.check_termination()
 
     os.remove("input.c")
     os.remove("output.ll")
     os.remove("output")
 
     # Remove all files ending with .dot (CFG files)
+    """
     for file in os.listdir():
         if file.endswith(".dot"):
             os.remove(file)
+            
+    """
 
     return {"llvm": str(llvm_code), "infinite_loops": str(loops)}
