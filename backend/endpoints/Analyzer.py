@@ -32,7 +32,7 @@ async def analyze(code: Code):
     loops = Parser.check_const_loops(ast, ast)
 
     rec_analyzer = RecursiveCalls(llvm_code, ast)
-    print(rec_analyzer.get_recursive_calls(), file=sys.stderr)
+    rec_calls = rec_analyzer.get_recursive_calls()
     rec_analyzer.check_termination()
 
     os.remove("input.c")
@@ -47,4 +47,4 @@ async def analyze(code: Code):
             
     """
 
-    return {"llvm": str(llvm_code), "infinite_loops": str(loops)}
+    return {"llvm": str(llvm_code), "infinite_loops": str(loops), "Recursive Calls": rec_calls, "Termination": rec_analyzer.check_termination()}

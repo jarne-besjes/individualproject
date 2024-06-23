@@ -47,20 +47,11 @@ class RecursiveFunction:
         self.base_cases = base_cases
         self.base_case_operations = []
         self.check_base_cases()
-
-        print("Base case operations: ", self.base_case_operations, file=sys.stderr)
-
         self.calls = calls
         self.function_call_values = []
         self.check_call_values()
         self.recursive_operations = []
         self.check_recursive_calls_operations()
-
-        print("Recursive operations: ", self.recursive_operations, file=sys.stderr)
-
-        for arg in self.args:
-            print("Arg: ", arg, file=sys.stderr)
-            self._check_termination(arg)
 
     def check_call_values(self) -> None:
         """
@@ -74,8 +65,6 @@ class RecursiveFunction:
                         self.args[i - 1], OperationType.ass, call.children[i].value
                     )
                 )
-
-        print("Function call values: ", self.function_call_values, file=sys.stderr)
 
     def check_base_cases(self) -> None:
         """
@@ -268,8 +257,10 @@ class RecursiveFunction:
                                     added = True
                                     break
                         elif arg_value > case.b:
-                            current_value = arg_value
-                            while current_value >= case.b:
+                            current_value = int(arg_value)
+                            current_diff = int(arg_value) - int(case.b)
+                            diff_wrong = 0
+                            while current_value >= int(case.b):
                                 _locals = locals()
                                 exec(f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}", globals(), locals())
                                 current_value = _locals['current_value']
@@ -304,9 +295,7 @@ class RecursiveFunction:
                                 added = True
                     if not added:
                         returns.append(False)
-
-
-            print("Returns: ", returns, file=sys.stderr)
+        return all(returns)
 
 
 class RecursiveCalls:
@@ -461,10 +450,20 @@ class RecursiveCalls:
             function_name, args, base_cases, recursive_calls, function_calls
         )
 
+        for arg in args:
+            if not rec_func._check_termination(arg):
+                return False
+        return True
+
     def check_termination(self) -> bool:
         assert (
             self.recursive_calls is not None
         ), "You must call get_recursive_calls() before calling check_termination()"
 
+        returns = {}
+
         for function in self.recursive_calls:
             terminates = self._check_termination_function(function[0], function[1])
+            returns[function[0]] = terminates
+
+        return returns
