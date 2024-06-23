@@ -58,6 +58,10 @@ class RecursiveFunction:
 
         print("Recursive operations: ", self.recursive_operations, file=sys.stderr)
 
+        for arg in self.args:
+            print("Arg: ", arg, file=sys.stderr)
+            self._check_termination(arg)
+
     def check_call_values(self) -> None:
         """
         Check initial values of function calls
@@ -191,7 +195,118 @@ class RecursiveFunction:
             using the base case operations and recursive operations
         :return: list of valid arguments for which the function terminates
         """
-        pass
+        returns = []
+        arg_value = self.function_call_values[self.args.index(arg)].b
+        for case in self.base_case_operations:
+            if case.type == OperationType.gt:
+                for op in self.recursive_operations:
+                    if op.a == arg:
+                        if op.type == OperationType.addition:
+                            returns.append(True)
+                        elif op.type == OperationType.subtraction:
+                            returns.append(arg_value > case.b)
+                        elif op.type == OperationType.multiplication:
+                            returns.append(case.b > 1)
+                        elif op.type == OperationType.division:
+                            returns.append(arg_value > case.b or (0 < case.b < 1))
+            elif case.type == OperationType.lt:
+                for op in self.recursive_operations:
+                    if op.a == arg:
+                        if op.type == OperationType.subtraction:
+                            returns.append(True)
+                        elif op.type == OperationType.addition:
+                            returns.append(arg_value < case.b)
+                        elif op.type == OperationType.multiplication:
+                            returns.append(arg_value < case.b)
+                        elif op.type == OperationType.division:
+                            returns.append(arg_value < case.b or case.b > 0)
+            elif case.type == OperationType.gte:
+                for op in self.recursive_operations:
+                    if op.a == arg:
+                        if op.type == OperationType.addition:
+                            returns.append(True)
+                        elif op.type == OperationType.subtraction:
+                            returns.append(arg_value >= case.b)
+                        elif op.type == OperationType.multiplication:
+                            returns.append(case.b > 1)
+                        elif op.type == OperationType.division:
+                            returns.append(arg_value >= case.b or (0 < case.b < 1))
+            elif case.type == OperationType.lte:
+                for op in self.recursive_operations:
+                    if op.a == arg:
+                        if op.type == OperationType.subtraction:
+                            returns.append(True)
+                        elif op.type == OperationType.addition:
+                            returns.append(arg_value <= case.b)
+                        elif op.type == OperationType.multiplication:
+                            returns.append(arg_value <= case.b)
+                        elif op.type == OperationType.division:
+                            returns.append(arg_value <= case.b or case.b > 0)
+            elif case.type == OperationType.eq:
+                if arg_value == case.b:
+                    returns.append(True)
+                else:
+                    added = False
+                    # Check if value can become equal to b
+                    print("Inside of equal")
+                    for rec_op in self.recursive_operations:
+                        if arg_value < case.b:
+                            current_diff = int(case.b) - int(arg_value)
+                            diff_wrong = 0
+                            current_value = int(arg_value)
+                            while current_value <= int(case.b):
+                                _locals = locals()
+                                exec(f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}", globals(), locals())
+                                current_value = _locals['current_value']
+                                if (int(case.b) - current_value) > current_diff:
+                                    diff_wrong += 1
+                                    if diff_wrong > 10:
+                                        break
+
+                                if current_value == int(case.b):
+                                    returns.append(True)
+                                    added = True
+                                    break
+                        elif arg_value > case.b:
+                            current_value = arg_value
+                            while current_value >= case.b:
+                                _locals = locals()
+                                exec(f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}", globals(), locals())
+                                current_value = _locals['current_value']
+                                if (int(case.b) - current_value) > current_diff:
+                                    diff_wrong += 1
+                                    if diff_wrong > 10:
+                                        break
+                                if current_value == int(case.b):
+                                    returns.append(True)
+                                    added = True
+                                    break
+                        if not added:
+                            returns.append(False)
+            elif case.type == OperationType.neq:
+                if arg_value != case.b:
+                    returns.append(True)
+                else:
+                    added: bool = False
+                    for rec_op in self.recursive_operations:
+                        if rec_op.a == arg:
+                            if rec_op.type == OperationType.addition:
+                                returns.append(True)
+                                added = True
+                            elif rec_op.type == OperationType.subtraction:
+                                returns.append(True)
+                                added = True
+                            elif rec_op.type == OperationType.multiplication:
+                                returns.append(True)
+                                added = True
+                            elif rec_op.type == OperationType.division:
+                                returns.append(True)
+                                added = True
+                    if not added:
+                        returns.append(False)
+
+
+            print("Returns: ", returns, file=sys.stderr)
 
 
 class RecursiveCalls:
