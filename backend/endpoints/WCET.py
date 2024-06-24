@@ -33,20 +33,20 @@ class WCETAnalyser:
         started: bool = False
         wcet: int = 0
         for line in self.llvm_code.split("\n"):
-            if "define" in line and not started:
+            if "define" in line:
+                if started:
+                    self.functions_wcet[function_name] = wcet
+                    wcet = 0
+                    started = False
                 function_name = line.split("@")[1].split("(")[0]
                 started = True
-            if "define" in line and started:
-                self.functions_wcet[function_name] = wcet
-                wcet = 0
-                started = False
+
             if started:
                 for key, value in llvmstatement_cycles.items():
-                    print("Key: ", key)
-                    print("Line: ", line)
+
                     if key in line:
-                        print("INSIDE OF IF")
                         wcet += value
 
 
 
+        self.functions_wcet[function_name] = wcet
