@@ -32,21 +32,27 @@ class WCETAnalyser:
     def get_wcet_of_functions(self) -> int:
         started: bool = False
         wcet: int = 0
+        brackets = 0
         for line in self.llvm_code.split("\n"):
             if "define" in line:
-                if started:
-                    self.functions_wcet[function_name] = wcet
-                    wcet = 0
-                    started = False
                 function_name = line.split("@")[1].split("(")[0]
+                brackets = 0
+                wcet = 0
                 started = True
 
-            if started:
-                for key, value in llvmstatement_cycles.items():
+            if "{" in line:
+                brackets += 1
+            if "}" in line:
+                brackets -= 1
+                if brackets == 0:
+                    started = False
+                    self.functions_wcet[function_name] = wcet
 
+            if started:
+                added = False
+                for key, value in llvmstatement_cycles.items():
                     if key in line:
                         wcet += value
-
-
-
-        self.functions_wcet[function_name] = wcet
+                        added = True
+                if not added:
+                    print("No wcet found for: ", line, file=sys.stderr)
