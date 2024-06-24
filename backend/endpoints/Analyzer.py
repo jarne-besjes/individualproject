@@ -40,8 +40,6 @@ async def analyze(code: Code):
     wcet_analyzer.get_wcet_of_functions()
     print(wcet_analyzer.functions_wcet, file=sys.stderr)
 
-
-
     os.remove("input.c")
     os.remove("output.ll")
     os.remove("output")
@@ -54,4 +52,10 @@ async def analyze(code: Code):
             
     """
 
-    return {"llvm": str(llvm_code), "infinite_loops": str(loops), "Recursive Calls": rec_calls, "Termination": rec_termination}
+    return {
+        "llvm": str(llvm_code),
+        "infinite_loops": str(loops),
+        "recursive_calls": rec_calls,
+        "termination": rec_termination,
+        "wcet_functions": wcet_analyzer.functions_wcet,
+    }
