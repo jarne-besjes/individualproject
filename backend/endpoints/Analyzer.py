@@ -10,6 +10,7 @@ from .Loops import fold_loops
 from .Parser import Parser
 from .DotExporter import DotExporter
 from .Rec import RecursiveCalls
+from .WCET import WCETAnalyser
 
 router = APIRouter()
 
@@ -33,7 +34,13 @@ async def analyze(code: Code):
 
     rec_analyzer = RecursiveCalls(llvm_code, ast)
     rec_calls = rec_analyzer.get_recursive_calls()
-    rec_analyzer.check_termination()
+    rec_termination = rec_analyzer.check_termination()
+
+    wcet_analyzer = WCETAnalyser(llvm_code, rec_calls)
+    wcet_analyzer.get_wcet_of_functions()
+    print(wcet_analyzer.functions_wcet, file=sys.stderr)
+
+
 
     os.remove("input.c")
     os.remove("output.ll")
@@ -47,4 +54,4 @@ async def analyze(code: Code):
             
     """
 
-    return {"llvm": str(llvm_code), "infinite_loops": str(loops), "Recursive Calls": rec_calls, "Termination": rec_analyzer.check_termination()}
+    return {"llvm": str(llvm_code), "infinite_loops": str(loops), "Recursive Calls": rec_calls, "Termination": rec_termination}
