@@ -141,27 +141,110 @@ class Parser:
                     return result
 
             else:
-                # Store all variables in the condition
-                condition = child.children[0]
+                # Get all variables in the condition
                 condition_variables = []
-                for node in condition.children:
+
+                def find_condition_variables(node: TreeNode) -> None:
                     if isinstance(node, IdNode):
                         condition_variables.append(node.value)
+                    for child in node.children:
+                        find_condition_variables(child)
 
-                # Check if any of the variables in the condition are used in the loop
-                def find_variable(node: TreeNode) -> bool:
+                condition = child.children[0]
+                scope = child.children[1]
+                find_condition_variables(condition)
+
+                # Check if any of the variables in the condition are changed in the loop
+                def find_variable_in_loop(node: TreeNode) -> bool:
                     if isinstance(node, AssignNode):
                         if node.children[0].value in condition_variables:
                             return True
                     for child in node.children:
-                        if find_variable(child):
+                        if find_variable_in_loop(child):
                             return True
                     return False
 
-                condition_changes = find_variable(child.children[1])
+                condition_changes = find_variable_in_loop(child.children[1])
+
+                # At least one of the condition variables changes in the loop
                 if condition_changes:
-                    return "Condition change"
-                    # TODO: Check invariant
+                    # TODO: find original values, determine if they need to go up or down, determine if they go up or down respectively
+                    # Find all original values of the variables in the condition
+                    def find_condition_variable_value(node: str, root: TreeNode) -> TreeNode | None:
+                        if isinstance(root, NewVariableNode):
+                            if root.children[1].value == node:
+                                return root.children[-1].value
+                        for c in root.children:
+                            temp = find_condition_variable_value(node, c)
+                            if temp is not None:
+                                return temp
+                        return None
+
+                    condition_variables_values = {}
+                    for var in condition_variables:
+                        condition_variables_values[var] = find_condition_variable_value(var, root)
+
+                    # Determine the terminal values of the condition variables
+                    terminal_values = {}
+                    for var in condition_variables:
+                        def find_comparisons(node: TreeNode):
+                            if isinstance(node, (LtNode, LeqNode, GtNode, GeqNode, NeqNode)):
+                                if node.children[0].value == var or node.children[1].value == var:
+                                    return node
+                            for child in node.children:
+                                res = find_comparisons(child)
+                                if res is not None:
+                                    return res
+
+                        comparison = find_comparisons(condition)
+                        terminal_value = None
+                        if isinstance(comparison, (LtNode, GtNode, NeqNode)):
+                            if comparison.children[0].value == var:
+                                terminal_value = int(comparison.children[1].value)
+                            else:
+                                terminal_value = int(comparison.children[0].value)
+                        elif isinstance(comparison, (LeqNode, GeqNode)):
+                            if comparison.children[0].value == var:
+                                terminal_value = int(comparison.children[1].value) + 1
+                            else:
+                                terminal_value = int(comparison.children[0].value) + 1
+
+                        terminal_values[var] = terminal_value
+
+                    # Determine if the condition goes up or down
+                    variable_terminates = {}
+                    for var in condition_variables:
+                        def find_condition_direction(node: TreeNode):
+                            if isinstance(node, PlusNode) and (node.children[0].value == var or node.children[1].value == var):
+                                return True
+                            if isinstance(node, MinusNode) and (node.children[0].value == var or node.children[1].value == var):
+                                return False
+                            for c in node.children:
+                                res = find_condition_direction(c)
+                                if res is not None:
+                                    return res
+                            return None
+
+                        goes_up = find_condition_direction(scope)
+                        if goes_up is None:
+                            variable_terminates[var] = False
+                            continue
+
+                        print(var)
+                        print(goes_up)
+                        print(terminal_values[var], condition_variables_values[var])
+                        if terminal_values[var] >= int(condition_variables_values[var]) and goes_up:
+                            variable_terminates[var] = True
+                        elif terminal_values[var] <= int(condition_variables_values[var]) and not goes_up:
+                            variable_terminates[var] = True
+                        else:
+                            variable_terminates[var] = False
+
+                    if all(variable_terminates.values()):
+                        return True
+                    else:
+                        return False
+
                 else:
                     return Parser.evaluate_condition(root, condition)
 
@@ -176,6 +259,7 @@ class Parser:
 
             # Find all variable values in the condition
             condition_var_values = {}
+
             def find_variable_value(node: TreeNode):
                 if isinstance(node, NewVariableNode):
                     if node.children[1].value in condition_ids:
