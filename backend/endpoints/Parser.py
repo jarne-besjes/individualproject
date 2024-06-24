@@ -85,38 +85,38 @@ class Parser:
             if len(child.children) == 1:
                 new_child = child.children[0]
                 if not isinstance(
-                        child,
-                        (
-                                ProgNode,
-                                AddressNode,
-                                ReturnNode,
-                                NotNode,
-                                PointerNode,
-                                IntPointerNode,
-                                FloatPointerNode,
-                                CharPointerNode,
-                                BoolPointerNode,
-                                PrintfNode,
-                                ElseNode,
-                                IfNode,
-                                ScopeNode,
-                                DefaultNode,
-                                CaseNode,
-                                EnumNode,
-                                EnumEntryNode,
-                                IncludeNode,
-                                BitNotNode,
-                                ArrayDeclElementsNode,
-                        ),
+                    child,
+                    (
+                        ProgNode,
+                        AddressNode,
+                        ReturnNode,
+                        NotNode,
+                        PointerNode,
+                        IntPointerNode,
+                        FloatPointerNode,
+                        CharPointerNode,
+                        BoolPointerNode,
+                        PrintfNode,
+                        ElseNode,
+                        IfNode,
+                        ScopeNode,
+                        DefaultNode,
+                        CaseNode,
+                        EnumNode,
+                        EnumEntryNode,
+                        IncludeNode,
+                        BitNotNode,
+                        ArrayDeclElementsNode,
+                    ),
                 ):
                     idx = cst.children.index(child)
                     cst.children[idx] = new_child
 
             # C-string
             if (
-                    isinstance(child, ArrayDeclAssignNode)
-                    and child.children[0].value == "char"
-                    and isinstance(child.children[-1], StringNode)
+                isinstance(child, ArrayDeclAssignNode)
+                and child.children[0].value == "char"
+                and isinstance(child.children[-1], StringNode)
             ):
                 char_array = []
                 for c in child.children[-1].value:
@@ -170,7 +170,9 @@ class Parser:
                 if condition_changes:
                     # TODO: find original values, determine if they need to go up or down, determine if they go up or down respectively
                     # Find all original values of the variables in the condition
-                    def find_condition_variable_value(node: str, root: TreeNode) -> TreeNode | None:
+                    def find_condition_variable_value(
+                        node: str, root: TreeNode
+                    ) -> TreeNode | None:
                         if isinstance(root, NewVariableNode):
                             if root.children[1].value == node:
                                 return root.children[-1].value
@@ -182,14 +184,22 @@ class Parser:
 
                     condition_variables_values = {}
                     for var in condition_variables:
-                        condition_variables_values[var] = find_condition_variable_value(var, root)
+                        condition_variables_values[var] = find_condition_variable_value(
+                            var, root
+                        )
 
                     # Determine the terminal values of the condition variables
                     terminal_values = {}
                     for var in condition_variables:
+
                         def find_comparisons(node: TreeNode):
-                            if isinstance(node, (LtNode, LeqNode, GtNode, GeqNode, NeqNode)):
-                                if node.children[0].value == var or node.children[1].value == var:
+                            if isinstance(
+                                node, (LtNode, LeqNode, GtNode, GeqNode, NeqNode)
+                            ):
+                                if (
+                                    node.children[0].value == var
+                                    or node.children[1].value == var
+                                ):
                                     return node
                             for child in node.children:
                                 res = find_comparisons(child)
@@ -214,10 +224,17 @@ class Parser:
                     # Determine if the condition goes up or down
                     variable_terminates = {}
                     for var in condition_variables:
+
                         def find_condition_direction(node: TreeNode):
-                            if isinstance(node, PlusNode) and (node.children[0].value == var or node.children[1].value == var):
+                            if isinstance(node, PlusNode) and (
+                                node.children[0].value == var
+                                or node.children[1].value == var
+                            ):
                                 return True
-                            if isinstance(node, MinusNode) and (node.children[0].value == var or node.children[1].value == var):
+                            if isinstance(node, MinusNode) and (
+                                node.children[0].value == var
+                                or node.children[1].value == var
+                            ):
                                 return False
                             for c in node.children:
                                 res = find_condition_direction(c)
@@ -233,9 +250,15 @@ class Parser:
                         print(var)
                         print(goes_up)
                         print(terminal_values[var], condition_variables_values[var])
-                        if terminal_values[var] >= int(condition_variables_values[var]) and goes_up:
+                        if (
+                            terminal_values[var] >= int(condition_variables_values[var])
+                            and goes_up
+                        ):
                             variable_terminates[var] = True
-                        elif terminal_values[var] <= int(condition_variables_values[var]) and not goes_up:
+                        elif (
+                            terminal_values[var] <= int(condition_variables_values[var])
+                            and not goes_up
+                        ):
                             variable_terminates[var] = True
                         else:
                             variable_terminates[var] = False
@@ -277,27 +300,60 @@ class Parser:
 
             match condition:
                 case PlusNode():
-                    return bool(int(condition.children[0].value) + int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        + int(condition.children[1].value)
+                    )
                 case MinusNode():
-                    return bool(int(condition.children[0].value) - int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        - int(condition.children[1].value)
+                    )
                 case MultNode():
-                    return bool(int(condition.children[0].value) * int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        * int(condition.children[1].value)
+                    )
                 case DivNode():
-                    return bool(int(condition.children[0].value) / int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        / int(condition.children[1].value)
+                    )
                 case ModNode():
-                    return bool(int(condition.children[0].value) % int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        % int(condition.children[1].value)
+                    )
                 case GtNode():
-                    return bool(int(condition.children[0].value) > int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        > int(condition.children[1].value)
+                    )
                 case LtNode():
-                    return bool(int(condition.children[0].value) < int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        < int(condition.children[1].value)
+                    )
                 case GeqNode():
-                    return bool(int(condition.children[0].value) >= int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        >= int(condition.children[1].value)
+                    )
                 case LeqNode():
-                    return bool(int(condition.children[0].value) <= int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        <= int(condition.children[1].value)
+                    )
                 case EqualNode():
-                    return bool(int(condition.children[0].value) == int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        == int(condition.children[1].value)
+                    )
                 case NeqNode():
-                    return bool(int(condition.children[0].value) != int(condition.children[1].value))
+                    return bool(
+                        int(condition.children[0].value)
+                        != int(condition.children[1].value)
+                    )
 
 
 operator_signs = {
@@ -335,7 +391,7 @@ class ASTVisitor(CVisitor):
         return ArrayDeclarationNode(line_nr=ctx.start.line, children=children)
 
     def visitArray_decl_assignment(
-            self, ctx: compilerParser.Array_decl_assignmentContext
+        self, ctx: compilerParser.Array_decl_assignmentContext
     ):
         children = []
         for child in ctx.children:

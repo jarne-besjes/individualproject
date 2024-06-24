@@ -23,6 +23,7 @@ llvmstatement_cycles = {
     "indirectbr": 1,
 }
 
+
 class WCETAnalyser:
     def __init__(self, llvm_code: str, rec_functions) -> None:
         self.llvm_code = llvm_code

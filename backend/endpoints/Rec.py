@@ -245,8 +245,12 @@ class RecursiveFunction:
                             current_value = int(arg_value)
                             while current_value <= int(case.b):
                                 _locals = locals()
-                                exec(f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}", globals(), locals())
-                                current_value = _locals['current_value']
+                                exec(
+                                    f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}",
+                                    globals(),
+                                    locals(),
+                                )
+                                current_value = _locals["current_value"]
                                 if (int(case.b) - current_value) > current_diff:
                                     diff_wrong += 1
                                     if diff_wrong > 10:
@@ -262,8 +266,12 @@ class RecursiveFunction:
                             diff_wrong = 0
                             while current_value >= int(case.b):
                                 _locals = locals()
-                                exec(f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}", globals(), locals())
-                                current_value = _locals['current_value']
+                                exec(
+                                    f"current_value = current_value {rec_op.type.value} {int(rec_op.b)}",
+                                    globals(),
+                                    locals(),
+                                )
+                                current_value = _locals["current_value"]
                                 if (int(case.b) - current_value) > current_diff:
                                     diff_wrong += 1
                                     if diff_wrong > 10:
