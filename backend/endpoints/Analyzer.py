@@ -39,8 +39,7 @@ async def analyze(code: Code):
 
     wcet_analyzer = WCETAnalyser(llvm_code, rec_calls, rec_functions_execs)
     wcet_analyzer.get_wcet_of_functions()
-    print(wcet_analyzer.functions_wcet, file=sys.stderr)
-    print("Total WCET: ", wcet_analyzer.get_total_wcet(), file=sys.stderr)
+    total_wcet = wcet_analyzer.get_total_wcet()
 
     os.remove("input.c")
     os.remove("output.ll")
@@ -60,4 +59,5 @@ async def analyze(code: Code):
         "recursive_calls": rec_calls,
         "termination": rec_termination,
         "wcet_functions": wcet_analyzer.functions_wcet,
+        "wcet_total": total_wcet,
     }
