@@ -25,14 +25,17 @@ llvmstatement_cycles = {
 
 
 class WCETAnalyser:
-    def __init__(self, llvm_code: str, rec_functions, rec_functions_execs) -> None:
+    def __init__(self, llvm_code: str, rec_functions, rec_functions_execs, loop_max_iterations) -> None:
         self.llvm_code = llvm_code
         self.rec_functions = rec_functions
         self.functions_wcet = {}
         self.rec_functions_execs: dict[str, dict[TreeNode, int]] = rec_functions_execs
-        self.loops_wcet = {}
+        self.loops_wcet = []
+        self.loops_max_iterations = loop_max_iterations
 
-    def get_total_wcet(self) -> int:
+    def get_total_wcet(self) -> int | str:
+        if float("inf") in list(self.loops_max_iterations.values()):
+            return "inf"
         wcet = 0
         for key, cpuexecs in self.functions_wcet.items():
             recursive_function = False
@@ -49,6 +52,9 @@ class WCETAnalyser:
                 wcet += cpuexecs * nr_iterations
             else:
                 wcet += cpuexecs
+        print(self.loops_wcet)
+        for loop_wcet in self.loops_wcet:
+            wcet += loop_wcet
         return wcet
 
     def get_wcet_of_functions(self) -> int:
@@ -80,4 +86,21 @@ class WCETAnalyser:
                     pass
 
     def get_wcet_of_loops(self) -> int:
-        pass
+        wcet: int = 0
+        buffer = []
+        idx = 0
+        for line in self.llvm_code.split("\n"):
+            if not "loop" in line:
+                buffer.append(line)
+            elif "loop" not in line and "br" in line:
+                buffer.clear()
+            else:
+                for buffer_line in buffer:
+                    for key, value in llvmstatement_cycles.items():
+                        if key in buffer_line:
+                            wcet += value
+                try:
+                    self.loops_wcet.append(wcet * list(self.loops_max_iterations.values())[idx])
+                    idx += 1
+                except:
+                    pass

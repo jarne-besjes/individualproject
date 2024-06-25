@@ -6,7 +6,8 @@ from .TreeNode import *
 class LoopAnalyzer:
     def __init__(self, ast) -> None:
         self.ast = ast
-        self.loop_terminations = {}
+        self.loop_infinity: dict = {}
+        self.loop_max_iterations: dict = {}
 
     def analyze(self, node: TreeNode):
         for child in node.children:
@@ -23,7 +24,8 @@ class LoopAnalyzer:
                 if isinstance(child.children[0], IntNode) and bool(
                         int(child.children[0].value) >= 1
                 ):
-                    self.loop_terminations[id(child)] = True
+                    self.loop_infinity[id(child)] = True
+                    self.loop_max_iterations[id(child)] = float("inf")
                     return
 
                 def find_condition_variables(node: TreeNode) -> None:
@@ -142,13 +144,26 @@ class LoopAnalyzer:
                         else:
                             variable_terminates[var] = False
 
+                    # Determine iterations
+                    iterations = float("inf")
+                    for var in condition_variables:
+                        temp = abs(variable_terminates[var] - int(condition_variables_values[var]))
+                        if temp < iterations:
+                            iterations = temp
+
                     if all(variable_terminates.values()):
-                        self.loop_terminations[id(child)] = False
+                        self.loop_infinity[id(child)] = False
+                        self.loop_max_iterations[id(child)] = iterations
                     else:
-                        self.loop_terminations[id(child)] = True
+                        self.loop_infinity[id(child)] = True
 
                 else:
-                    self.loop_terminations[id(child)] = self._evaluate_condition(condition)
+                    evaluation = self._evaluate_condition(condition)
+                    self.loop_infinity[id(child)] = evaluation
+                    if evaluation:
+                        self.loop_max_iterations[id(child)] = float("inf")
+                    else:
+                        self.loop_max_iterations[id(child)] = 0
 
     def _evaluate_condition(self, condition: TreeNode) -> bool:
         # Find all id's in condition
