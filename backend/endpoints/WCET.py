@@ -30,12 +30,11 @@ class WCETAnalyser:
         self.rec_functions = rec_functions
         self.functions_wcet = {}
         self.rec_functions_execs: dict[str, dict[TreeNode, int]] = rec_functions_execs
+        self.loops_wcet = {}
 
     def get_total_wcet(self) -> int:
         wcet = 0
         for key, cpuexecs in self.functions_wcet.items():
-            print("function: ", key, file=sys.stderr)
-            print("rec_functions: ", self.rec_functions, file=sys.stderr)
             recursive_function = False
             rec_value = None
             for rec_key, rec_value in self.rec_functions:
@@ -43,17 +42,10 @@ class WCETAnalyser:
                     recursive_function = True
             if recursive_function:
                 nr_iterations = 0
-                print(self.rec_functions_execs, file=sys.stderr)
                 for rec_key, rec_value in self.rec_functions_execs.items():
-
-                    print("key:", key, file=sys.stderr)
-                    print("rec_key: ", rec_key, file=sys.stderr)
-
                     if key == rec_key:
-                        print("inside if: ", rec_value, file=sys.stderr)
                         for _, value in rec_value.items():
                             nr_iterations += value
-                print("nr_iterations: ", nr_iterations, file=sys.stderr)
                 wcet += cpuexecs * nr_iterations
             else:
                 wcet += cpuexecs
@@ -85,4 +77,7 @@ class WCETAnalyser:
                         wcet += value
                         added = True
                 if not added:
-                    print("No wcet found for (this might be normal): ", line, file=sys.stderr)
+                    pass
+
+    def get_wcet_of_loops(self) -> int:
+        pass

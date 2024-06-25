@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .LLVMConverter import convert_to_llvm
-from .Loops import fold_loops
+from .Loops import LoopAnalyzer
 from .Parser import Parser
 from .DotExporter import DotExporter
 from .Rec import RecursiveCalls
@@ -30,7 +30,8 @@ async def analyze(code: Code):
     ast = Parser.parse("input.c")
     DotExporter.export(ast, "output")
 
-    loops = Parser.check_const_loops(ast, ast)
+    loop_analyzer = LoopAnalyzer(ast)
+    loop_analyzer.analyze(ast)
 
     rec_analyzer = RecursiveCalls(llvm_code, ast)
     rec_calls = rec_analyzer.get_recursive_calls()
@@ -55,7 +56,7 @@ async def analyze(code: Code):
 
     return {
         "llvm": str(llvm_code),
-        "infinite_loops": str(loops),
+        "infinite_loops": str(loop_analyzer.loop_terminations),
         "recursive_calls": rec_calls,
         "termination": rec_termination,
         "wcet_functions": wcet_analyzer.functions_wcet,
