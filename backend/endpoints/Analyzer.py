@@ -57,7 +57,7 @@ async def analyze(code: Code):
 
     return {
         "llvm": str(llvm_code),
-        "infinite_loops": str(loop_analyzer.loop_infinity),
+        "infinite_loops": loop_analyzer.loop_infinity,
         "recursive_calls": rec_calls,
         "termination": rec_termination,
         "wcet_functions": wcet_analyzer.functions_wcet,
