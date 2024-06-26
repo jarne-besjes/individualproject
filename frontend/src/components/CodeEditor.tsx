@@ -16,7 +16,7 @@ type FunctionType = {
 const generateTable = (functions: Array<FunctionType>) => {
     let columns: Array<MRT_ColumnDef<FunctionType>> = [
         { accessorKey: 'name', header: "Function Name" },
-        { accessorKey: 'exec_time', header: "Execution Time" }
+        { accessorKey: 'exec_time', header: "Execution Time (CPU Cycles)" }
     ];
     let data = functions;
 
@@ -40,6 +40,7 @@ export default function CodeEditor(): JSX.Element {
     let [outputText, setOutputText] = useState("Nothing yet...");
     let [wcetFunctions, setWcetFunctions] = useState<Array<FunctionType>>([]);
     let [wcetText, setWcetText] = useState<string | null>(null);
+    let [outputInfiniteLoops, setOutputInfiniteLoops] = useState<boolean>(false);
 
     function submitCode(userCode: string): void {
         axios.post("http://localhost:8000/api/analyze", {
@@ -53,8 +54,11 @@ export default function CodeEditor(): JSX.Element {
                 exec_time: exec_time as number
             }));
             setWcetFunctions(function_list);
-
             setWcetText(response.data.wcet_total)
+
+            let infiniteloops_list: Map<string, boolean> = response.data.infinite_loops;
+            console.log("Infinite Loops:", infiniteloops_list);
+            setOutputInfiniteLoops(Object.values(infiniteloops_list).some((value) => value));
         }).catch((error) => {
             console.log(error);
         });
@@ -77,8 +81,12 @@ export default function CodeEditor(): JSX.Element {
                     {generateTable(wcetFunctions)}
                 </div>
                 <div id="wcet">
-                    <h3>WCET:</h3>
-                    <p>WCET: {wcetText} CPU Cycles</p>
+                    <h4>WCET:</h4>
+                    <p>{wcetText} CPU Cycles</p>
+                </div>
+                <div id="loop-finishes">
+                    <h4>Infinite loops</h4>
+                    <p>{outputInfiniteLoops ? 'yes' : 'no'}</p>
                 </div>
             </div>
         </div>

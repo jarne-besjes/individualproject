@@ -10,7 +10,7 @@ export default function Home() {
             <img src={logo} className="CompLogo" alt="logo" />
         </div>
         <div id="code-editor-div">
-            <h1>Code Editor:</h1>
+            <h1>Complexity Analyser:</h1>
             <CodeEditor></CodeEditor>
         </div>
     </div>
