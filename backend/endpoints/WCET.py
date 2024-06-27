@@ -39,6 +39,8 @@ class WCETAnalyser:
             return "inf"
         wcet = 0
         for key, cpuexecs in self.functions_wcet.items():
+            if cpuexecs is float("inf"):
+                return "inf"
             recursive_function = False
             rec_value = None
             for rec_key, rec_value in self.rec_functions:
@@ -49,11 +51,12 @@ class WCETAnalyser:
                 for rec_key, rec_value in self.rec_functions_execs.items():
                     if key == rec_key:
                         for _, value in rec_value.items():
+                            if value == float("inf"):
+                                return "inf"
                             nr_iterations += value
                 wcet += cpuexecs * nr_iterations
             else:
                 wcet += cpuexecs
-        print(self.loops_wcet)
         for loop_wcet in self.loops_wcet:
             wcet += loop_wcet
         return wcet

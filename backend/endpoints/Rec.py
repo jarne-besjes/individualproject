@@ -191,6 +191,10 @@ class RecursiveFunction:
         """
         returns = []
         arg_value = self.function_call_values[self.args.index(arg)].b
+        if len(self.base_case_operations) == 0:
+            print("No base cases found", file=sys.stderr)
+            self.nr_execs[self.calls[self.args.index(arg)]] = float('inf')
+            return False
         for case in self.base_case_operations:
             if case.type == OperationType.gt:
                 for op in self.recursive_operations:
@@ -492,12 +496,12 @@ class RecursiveCalls:
         )
 
         for arg in args:
+            self.nr_function_execs[function_name] = rec_func.nr_execs
             if not rec_func._check_termination(arg):
                 return False
-            self.nr_function_execs[function_name] = rec_func.nr_execs
         return True
 
-    def check_termination(self) -> bool:
+    def check_termination(self):
         assert (
             self.recursive_calls is not None
         ), "You must call get_recursive_calls() before calling check_termination()"
