@@ -87,7 +87,7 @@ class WCETAnalyser:
                     pass
 
     def get_wcet_of_loops(self) -> int:
-        wcet: int = 0
+        wcet = 0
         buffer = []
         idx = 0
         for line in self.llvm_code.split("\n"):
@@ -101,6 +101,9 @@ class WCETAnalyser:
                         if key in buffer_line:
                             wcet += value
                 try:
+                    if list(self.loops_max_iterations.values())[idx] == float("inf"):
+                        wcet = float("inf")
+                        return
                     self.loops_wcet.append(wcet * list(self.loops_max_iterations.values())[idx])
                     idx += 1
                 except:
