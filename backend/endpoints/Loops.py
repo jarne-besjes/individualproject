@@ -75,6 +75,7 @@ class LoopAnalyzer:
 
                     # Determine the terminal values of the condition variables
                     terminal_values = {}
+                    variable_conditions = {}
                     for var in condition_variables:
                         def find_comparisons(n: TreeNode):
                             if isinstance(
@@ -104,6 +105,7 @@ class LoopAnalyzer:
                                 terminal_value = int(comparison.children[0].value) + 1
 
                         terminal_values[var] = terminal_value
+                        variable_conditions[var] = comparison
 
                     # Determine if the condition goes up or down
                     variable_terminates = {}
@@ -127,18 +129,21 @@ class LoopAnalyzer:
                             return None
 
                         goes_up = find_condition_direction(loop_inside)
+                        print(terminal_values)
+                        print(condition_variables_values)
+                        print(variable_conditions)
                         if goes_up is None:
                             variable_terminates[var] = False
                             continue
 
                         if (
                                 terminal_values[var] >= int(condition_variables_values[var])
-                                and goes_up
+                                and (not goes_up or isinstance(variable_conditions[var], LtNode))
                         ):
                             variable_terminates[var] = True
                         elif (
                                 terminal_values[var] <= int(condition_variables_values[var])
-                                and not goes_up
+                                and (not goes_up or isinstance(variable_conditions[var], GtNode))
                         ):
                             variable_terminates[var] = True
                         else:
