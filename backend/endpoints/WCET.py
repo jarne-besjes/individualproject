@@ -7,15 +7,15 @@ llvmstatement_cycles = {
     "sub": 1,
     "mul": 15,
     "div": 15,
-    "icmp": 1,
-    "fcmp": 1,
+    "icmp": 4,
+    "fcmp": 4,
     "and": 1,
     "or": 1,
     "xor": 1,
     " j ": 17,
     "alloca": 1,
-    "load": 1,
-    "store": 1,
+    "load": 3,
+    "store": 3,
     "getelementptr": 1,
     "call": 17,
     "ret": 1,
@@ -33,6 +33,7 @@ class WCETAnalyser:
         self.rec_functions_execs: dict[str, dict[TreeNode, int]] = rec_functions_execs
         self.loops_wcet = []
         self.loops_max_iterations = loop_max_iterations
+        self.loop_idx = 0
 
     def get_total_wcet(self) -> int | str:
         if float("inf") in list(self.loops_max_iterations.values()):
@@ -57,15 +58,17 @@ class WCETAnalyser:
                 wcet += cpuexecs * nr_iterations
             else:
                 wcet += cpuexecs
-        for loop_wcet in self.loops_wcet:
-            wcet += loop_wcet
+        #for loop_wcet in self.loops_wcet:
+            #wcet += loop_wcet
         return wcet
 
     def get_wcet_of_functions(self) -> int:
         started: bool = False
         wcet: int = 0
+        wcet_loop: int = 0
         brackets = 0
         for line in self.llvm_code.split("\n"):
+            print(line, file=sys.stderr)
             if "define" in line:
                 function_name = line.split("@")[1].split("(")[0]
                 brackets = 0
@@ -80,8 +83,35 @@ class WCETAnalyser:
                     started = False
                     self.functions_wcet[function_name] = wcet
 
+
             if started:
+                buffer = []
+                idx = 0
                 added = False
+                if not "loop" in line:
+                    buffer.append(line)
+                elif "loop" not in line and "br" in line:
+                    buffer.clear()
+                    wcet_loop = 0
+                else:
+                    for buffer_line in buffer:
+                        for key, value in llvmstatement_cycles.items():
+                            if key in buffer_line:
+                                wcet_loop += value
+                                added = True
+                    try:
+                        print("idx: ", idx, file=sys.stderr)
+                        print(list(self.loops_max_iterations.values()), file=sys.stderr)
+                        if list(self.loops_max_iterations.values())[idx] == float("inf"):
+                            self.functions_wcet[function_name] = float("inf")
+                            idx += 1
+                            wcet_loop = 0
+                            started = False
+                            added = True
+                        wcet += wcet_loop * list(self.loops_max_iterations.values())[idx]
+                        idx += 1
+                    except:
+                        pass
                 for key, value in llvmstatement_cycles.items():
                     if key in line:
                         wcet += value
@@ -90,6 +120,7 @@ class WCETAnalyser:
                     pass
 
     def get_wcet_of_loops(self) -> int:
+        return
         wcet = 0
         buffer = []
         idx = 0
