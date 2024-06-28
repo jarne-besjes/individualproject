@@ -151,6 +151,10 @@ class LoopAnalyzer:
                         elif (
                             terminal_values[var] <= int(condition_variables_values[var]) and goes_up and isinstance(variable_conditions[var], GtNode)
                         ):
+                            variable_terminates[var] = False
+                        elif (
+                            terminal_values[var] <= int(condition_variables_values[var]) and isinstance(variable_conditions[var], (LtNode, LeqNode))
+                        ):
                             variable_terminates[var] = True
                         else:
                             variable_terminates[var] = False
@@ -171,8 +175,12 @@ class LoopAnalyzer:
                             self.loop_infinity[id(child)] = False
                             self.loop_max_iterations[id(child)] = iterations
                     else:
-                        self.loop_infinity[id(child)] = True
-                        self.loop_max_iterations[id(child)] = float("inf")
+                        if all(list(variable_terminates.values())):
+                            self.loop_infinity[id(child)] = False
+                            self.loop_max_iterations[id(child)] = iterations
+                        else:
+                            self.loop_infinity[id(child)] = True
+                            self.loop_max_iterations[id(child)] = float("inf")
 
                 else:
                     evaluation = self._evaluate_condition(condition)
