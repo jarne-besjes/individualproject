@@ -70,15 +70,19 @@ class WCETAnalyser:
         brackets = 0
 
         # find function node
-        function_name = ""
-        function_node = None
+        function_names = []
+        function_nodes = []
 
         def find_function(node: TreeNode) -> None:
             nonlocal function_name
             nonlocal function_node
             if isinstance(node, FunctionNode):
-                function_name = node.children[1].value
-                function_node = node
+                function_names.append(node.children[1].value)
+                function_nodes.append(node)
+                return
+            if isinstance(node, MainNode):
+                function_names.append("main")
+                function_nodes.append(node)
                 return
             for child in node.children:
                 find_function(child)
@@ -97,11 +101,9 @@ class WCETAnalyser:
                 if check_inf_while(child):
                     return True
             return False
-        if function_node is not None:
+        for function_name, function_node in zip(function_names, function_nodes):
             if check_inf_while(function_node.children[-1]):
                 self.functions_wcet[function_name] = "inf"
-
-        print("Function name: ", function_name, file=sys.stderr)
 
         for line in self.llvm_code.split("\n"):
             if "define" in line:

@@ -1,4 +1,5 @@
 import copy
+import sys
 
 from .TreeNode import *
 
@@ -171,6 +172,7 @@ class LoopAnalyzer:
                             self.loop_max_iterations[id(child)] = iterations
                     else:
                         self.loop_infinity[id(child)] = True
+                        self.loop_max_iterations[id(child)] = float("inf")
 
                 else:
                     evaluation = self._evaluate_condition(condition)
