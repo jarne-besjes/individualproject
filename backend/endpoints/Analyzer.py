@@ -38,7 +38,7 @@ async def analyze(code: Code):
     rec_functions_execs = rec_analyzer.nr_function_execs
     rec_termination = rec_analyzer.check_termination()
 
-    wcet_analyzer = WCETAnalyser(llvm_code, rec_calls, rec_functions_execs, loop_analyzer.loop_max_iterations)
+    wcet_analyzer = WCETAnalyser(llvm_code, rec_calls, rec_functions_execs, loop_analyzer.loop_max_iterations, ast)
     wcet_analyzer.get_wcet_of_functions()
     wcet_analyzer.get_wcet_of_loops()
     total_wcet = wcet_analyzer.get_total_wcet()

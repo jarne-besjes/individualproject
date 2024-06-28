@@ -26,7 +26,7 @@ llvmstatement_cycles = {
 
 
 class WCETAnalyser:
-    def __init__(self, llvm_code: str, rec_functions, rec_functions_execs, loop_max_iterations) -> None:
+    def __init__(self, llvm_code: str, rec_functions, rec_functions_execs, loop_max_iterations, root) -> None:
         self.llvm_code = llvm_code
         self.rec_functions = rec_functions
         self.functions_wcet = {}
@@ -34,6 +34,7 @@ class WCETAnalyser:
         self.loops_wcet = []
         self.loops_max_iterations = loop_max_iterations
         self.loop_idx = 0
+        self.root = root
 
     def get_total_wcet(self) -> int | str:
         if float("inf") in list(self.loops_max_iterations.values()):
@@ -67,10 +68,46 @@ class WCETAnalyser:
         wcet: int = 0
         wcet_loop: int = 0
         brackets = 0
+
+        # find function node
+        function_name = ""
+        function_node = None
+
+        def find_function(node: TreeNode) -> None:
+            nonlocal function_name
+            nonlocal function_node
+            if isinstance(node, FunctionNode):
+                function_name = node.children[1].value
+                function_node = node
+                return
+            for child in node.children:
+                find_function(child)
+
+        find_function(self.root)
+
+        def check_inf_while(node: TreeNode):
+            if isinstance(node, WhileNode):
+                print("While node: ", id(node), file=sys.stderr)
+                print(self.loops_max_iterations, file=sys.stderr)
+                if id(node) in self.loops_max_iterations:
+                    if self.loops_max_iterations[id(node)] == float("inf"):
+                        return True
+
+            for child in node.children:
+                if check_inf_while(child):
+                    return True
+            return False
+        if function_node is not None:
+            if check_inf_while(function_node.children[-1]):
+                self.functions_wcet[function_name] = "inf"
+
+        print("Function name: ", function_name, file=sys.stderr)
+
         for line in self.llvm_code.split("\n"):
-            print(line, file=sys.stderr)
             if "define" in line:
                 function_name = line.split("@")[1].split("(")[0]
+                if function_name in self.functions_wcet:
+                    continue
                 brackets = 0
                 wcet = 0
                 started = True
