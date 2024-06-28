@@ -129,21 +129,26 @@ class LoopAnalyzer:
                             return None
 
                         goes_up = find_condition_direction(loop_inside)
-                        print(terminal_values)
-                        print(condition_variables_values)
-                        print(variable_conditions)
                         if goes_up is None:
                             variable_terminates[var] = False
                             continue
 
                         if (
                                 terminal_values[var] >= int(condition_variables_values[var])
-                                and (not goes_up or isinstance(variable_conditions[var], LtNode))
+                                and goes_up
                         ):
                             variable_terminates[var] = True
                         elif (
                                 terminal_values[var] <= int(condition_variables_values[var])
-                                and (not goes_up or isinstance(variable_conditions[var], GtNode))
+                                and not goes_up
+                        ):
+                            variable_terminates[var] = True
+                        elif (
+                            terminal_values[var] >= int(condition_variables_values[var]) and not goes_up and isinstance(variable_conditions[var], LtNode)
+                        ):
+                            variable_terminates[var] = True
+                        elif (
+                            terminal_values[var] <= int(condition_variables_values[var]) and goes_up and isinstance(variable_conditions[var], GtNode)
                         ):
                             variable_terminates[var] = True
                         else:
@@ -152,13 +157,18 @@ class LoopAnalyzer:
                     # Determine iterations
                     iterations = float("inf")
                     for var in condition_variables:
-                        temp = abs(variable_terminates[var] - int(condition_variables_values[var]))
+                        temp = abs(terminal_values[var] - int(condition_variables_values[var]))
                         if temp < iterations:
                             iterations = temp
 
-                    if all(variable_terminates.values()):
-                        self.loop_infinity[id(child)] = False
-                        self.loop_max_iterations[id(child)] = iterations
+                    if isinstance(condition, AndNode):
+                        for i in variable_terminates.values():
+                            if i is False:
+                                self.loop_max_iterations[id(child)] = iterations
+                    elif isinstance(condition, OrNode):
+                        if all(variable_terminates.values()):
+                            self.loop_infinity[id(child)] = False
+                            self.loop_max_iterations[id(child)] = iterations
                     else:
                         self.loop_infinity[id(child)] = True
 
