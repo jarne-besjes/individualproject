@@ -10,7 +10,7 @@ All of the functionality is with C code
 
 ## Running the program
 First ANTLR should be compiled into python files which should be in the directory: `backend/endpoints/antlr`
-This should be as simple as running 
+After, this should be as simple as running 
 ```bash
 docker compose up --build
 ```
